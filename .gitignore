@@ -43,3 +43,6 @@ local.properties
 .temp/
 .tmp/
 .dsh/
+
+# 本地构建号（构建脚本自动维护）
+.build_num
