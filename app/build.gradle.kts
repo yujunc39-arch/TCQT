@@ -53,7 +53,7 @@ val generateBuildTimeSource = tasks.register("generateBuildTimeSource") {
 
     val outputFile = buildTimeDir
         .get()
-        .file("com/owo233/tcqt/data/BuildTime.kt")
+        .file("com/test/tcqt/data/BuildTime.kt")
         .asFile
 
     outputs.file(outputFile)
@@ -71,7 +71,7 @@ val generateBuildTimeSource = tasks.register("generateBuildTimeSource") {
 
         outputFile.writeText(
             """
-            package com.owo233.tcqt.data
+            package com.test.tcqt.data
 
             object BuildTime {
                 const val TIMESTAMP = "$formattedTime"
@@ -88,7 +88,7 @@ tasks.configureEach {
 }
 
 extensions.configure<ApplicationExtension> {
-    namespace = "com.owo233.tcqt"
+    namespace = "com.test.tcqt"
     ndkVersion = androidNdkVersion
 
     compileSdk {
@@ -98,7 +98,7 @@ extensions.configure<ApplicationExtension> {
     }
 
     defaultConfig {
-        applicationId = "com.owo233.tcqt"
+        applicationId = "com.test.tcqt"
         minSdk = androidMinSdkVersion
         targetSdk = androidTargetSdkVersion
         versionCode = appVersionCode

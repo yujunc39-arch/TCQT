@@ -1,6 +1,6 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
-import com.owo233.tcqt.api.Feature
+import com.test.tcqt.api.Feature
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

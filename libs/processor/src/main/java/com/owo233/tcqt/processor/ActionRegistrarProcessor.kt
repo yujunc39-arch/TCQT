@@ -1,4 +1,4 @@
-package com.owo233.tcqt.processor
+package com.test.tcqt.processor
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
@@ -7,7 +7,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.owo233.tcqt.annotations.RegisterAction
+import com.test.tcqt.annotations.RegisterAction
 
 class ActionRegistrarProcessor(
     private val codeGenerator: CodeGenerator,
@@ -39,16 +39,16 @@ class ActionRegistrarProcessor(
 
         val file = codeGenerator.createNewFile(
             Dependencies.ALL_FILES,
-            "com.owo233.tcqt.generated",
+            "com.test.tcqt.generated",
             "GeneratedActionList"
         )
 
         file.bufferedWriter().use { writer ->
             writer.write(
                 """
-            package com.owo233.tcqt.generated
+            package com.test.tcqt.generated
 
-            import com.owo233.tcqt.core.action.ActionSpec
+            import com.test.tcqt.core.action.ActionSpec
 
             internal object GeneratedActionList {
 

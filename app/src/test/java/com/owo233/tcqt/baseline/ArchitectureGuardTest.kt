@@ -1,4 +1,4 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -68,22 +68,22 @@ class ArchitectureGuardTest {
      * `core/action/ActionManager.kt → ui.settings.*`），属 S1c 的 ActionManager 三分。
      */
     private val resolvedViolations = listOf(
-        "host/QQInterfaces.kt -> com.owo233.tcqt.hooks.",
-        "ui/settings/SettingViewModel.kt -> com.owo233.tcqt.hooks.",
-        "core/dexkit/DexKitFinder.kt -> com.owo233.tcqt.hooks.",
-        "internals/QQInterfaces.kt -> com.owo233.tcqt.hooks.",
-        "activity/SettingViewModel.kt -> com.owo233.tcqt.hooks.",
-        "utils/dexkit/DexKitFinder.kt -> com.owo233.tcqt.hooks.",
-        "ActionManager.kt -> com.owo233.tcqt.activity.",
-        "core/action/ActionManager.kt -> com.owo233.tcqt.ui.settings.",
+        "host/QQInterfaces.kt -> com.test.tcqt.hooks.",
+        "ui/settings/SettingViewModel.kt -> com.test.tcqt.hooks.",
+        "core/dexkit/DexKitFinder.kt -> com.test.tcqt.hooks.",
+        "internals/QQInterfaces.kt -> com.test.tcqt.hooks.",
+        "activity/SettingViewModel.kt -> com.test.tcqt.hooks.",
+        "utils/dexkit/DexKitFinder.kt -> com.test.tcqt.hooks.",
+        "ActionManager.kt -> com.test.tcqt.activity.",
+        "core/action/ActionManager.kt -> com.test.tcqt.ui.settings.",
     )
 
     /** 第 4 处（ActionManager → ui）在 S1c 完成三分前必须仍然存在；消失即说明做过了。 */
-    private val pendingViolation = "core/action/ActionManager.kt -> com.owo233.tcqt.ui."
+    private val pendingViolation = "core/action/ActionManager.kt -> com.test.tcqt.ui."
 
     private fun relativePath(file: java.io.File): String =
         file.path.replace('\\', '/')
-            .substringAfter("/app/src/main/java/com/owo233/tcqt/")
+            .substringAfter("/app/src/main/java/com/test/tcqt/")
             .ifEmpty { file.name }
 
     /**
@@ -92,7 +92,7 @@ class ArchitectureGuardTest {
      * `ui.settings` 或 `ui.parasitic`。
      */
     private fun layerOfImport(importPath: String): String? {
-        val rel = importPath.removePrefix("com.owo233.tcqt.")
+        val rel = importPath.removePrefix("com.test.tcqt.")
         val parts = rel.split('.')
         val top = parts.firstOrNull().orEmpty()
         val topLayer = layerOfPackage[top] ?: return null
@@ -114,7 +114,7 @@ class ArchitectureGuardTest {
             val imports = SourceScanner.stripComments(SourceScanner.read(file))
                 .lineSequence()
                 .map { it.trim() }
-                .filter { it.startsWith("import com.owo233.tcqt.") }
+                .filter { it.startsWith("import com.test.tcqt.") }
             for (line in imports) {
                 val importPath = line.removePrefix("import ").trim()
                 val targetLayer = layerOfImport(importPath) ?: continue

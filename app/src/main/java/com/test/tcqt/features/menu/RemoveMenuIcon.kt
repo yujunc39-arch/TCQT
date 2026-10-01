@@ -1,0 +1,84 @@
+package com.test.tcqt.features.menu
+
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import com.test.tcqt.annotations.RegisterAction
+import com.test.tcqt.api.Feature
+import com.test.tcqt.core.env.toClass
+import com.test.tcqt.core.hook.hookAfter
+import com.test.tcqt.core.hook.hookBefore
+import com.test.tcqt.core.hook.isNotStatic
+import com.test.tcqt.core.reflect.findMethod
+import java.util.WeakHashMap
+
+@RegisterAction
+object RemoveMenuIcon : Feature(
+    key = "remove_menu_icon",
+    name = "移除菜单图标",
+    desc = "移除消息气泡菜单中的图标。",
+) {
+
+
+    private val scaledObjects = WeakHashMap<Any, Boolean>()
+
+    override fun install() {
+        "com.tencent.qqnt.aio.menu.ui.QQCustomMenuExpandableLayout".toClass.findMethod {
+            returnType = view
+            paramCount = 4
+            paramTypes = arrayOf(int, null, boolean, floatArr)
+        }.apply {
+            hookBefore { param ->
+                val layout = param.thisObject
+                if (scaledObjects.containsKey(layout)) return@hookBefore
+
+                val fields = layout.javaClass.declaredFields
+                    .filter { it.type == Int::class.javaPrimitiveType && it.isNotStatic }
+                    .onEach { it.isAccessible = true }
+
+                val heightFields = listOf("u", "v", "w", "y", "m", "o")
+                    .mapNotNull { fieldName -> fields.firstOrNull { it.name == fieldName } }
+
+                if (heightFields.isNotEmpty()) {
+                    var scaled = false
+                    for (field in heightFields) {
+                        val currentVal = field.getInt(layout)
+                        if (currentVal > 0) {
+                            val scaledVal = (currentVal / 1.5f).toInt()
+                            field.setInt(layout, scaledVal)
+                            scaled = true
+                        }
+                    }
+
+                    if (scaled) {
+                        scaledObjects[layout] = true
+                    }
+                }
+            }
+            hookAfter { param ->
+                val root = param.result as? ViewGroup ?: return@hookAfter
+                fun hideFirstImageView(viewGroup: ViewGroup): Boolean {
+                    for (i in 0 until viewGroup.childCount) {
+                        val child = viewGroup.getChildAt(i)
+                        if (child is ImageView) {
+                            child.visibility = View.GONE
+                            child.layoutParams?.let { lp ->
+                                if (lp is ViewGroup.MarginLayoutParams) {
+                                    lp.setMargins(0, 0, 0, 0)
+                                }
+                                lp.width = 0
+                                lp.height = 0
+                                child.layoutParams = lp
+                            }
+                            return true
+                        } else if (child is ViewGroup) {
+                            if (hideFirstImageView(child)) return true
+                        }
+                    }
+                    return false
+                }
+                hideFirstImageView(root)
+            }
+        }
+    }
+}

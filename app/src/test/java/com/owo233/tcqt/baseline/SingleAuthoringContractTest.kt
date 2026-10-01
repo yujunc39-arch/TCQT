@@ -1,4 +1,4 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -40,7 +40,7 @@ class SingleAuthoringContractTest {
     private fun filesIn(vararg topPackages: String) =
         SourceScanner.mainKotlinFiles().filter { file ->
             val rel = file.path.replace('\\', '/')
-            topPackages.any { rel.contains("/com/owo233/tcqt/$it/") }
+            topPackages.any { rel.contains("/com/test/tcqt/$it/") }
         }
 
     @Test
@@ -87,7 +87,7 @@ class SingleAuthoringContractTest {
      */
     @Test
     fun `管线包不得 import 兄弟 features 包`() {
-        val pipelinePrefix = "app/src/main/java/com/owo233/tcqt/features/internal/pipeline/"
+        val pipelinePrefix = "app/src/main/java/com/test/tcqt/features/internal/pipeline/"
         val siblingImport = Regex(
             "import\\s+com\\.owo233\\.tcqt\\.features\\.(?!internal\\.pipeline)[\\w.]+"
         )

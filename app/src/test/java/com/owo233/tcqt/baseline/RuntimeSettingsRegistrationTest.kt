@@ -1,9 +1,9 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
-import com.owo233.tcqt.core.action.ActionSpec
-import com.owo233.tcqt.core.config.BooleanSetting
-import com.owo233.tcqt.generated.GeneratedActionList
-import com.owo233.tcqt.ui.settings.FeatureCatalog
+import com.test.tcqt.core.action.ActionSpec
+import com.test.tcqt.core.config.BooleanSetting
+import com.test.tcqt.generated.GeneratedActionList
+import com.test.tcqt.ui.settings.FeatureCatalog
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

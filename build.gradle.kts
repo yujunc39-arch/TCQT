@@ -63,6 +63,8 @@ data class GitInfo(
     val versionName: String
 )
 
+val buildNum = System.getenv("BUILD_NUM")?.toIntOrNull() ?: 0
+
 val gitInfoProvider: Provider<GitInfo> =
     gitCommitCountProvider
         .map { it.toIntOrNull() ?: 1 }
@@ -70,7 +72,7 @@ val gitInfoProvider: Provider<GitInfo> =
             GitInfo(
                 commitCount = count,
                 shortHash = hash,
-                versionName = "$appBaseVersionName.r$count.$hash"
+                versionName = "$appBaseVersionName.r$count.$hash" + if (buildNum > 0) ".b$buildNum" else ""
             )
         }
 
@@ -84,7 +86,7 @@ val androidTargetCompatibility = JavaVersion.VERSION_21
 val androidNdkVersion = "30.0.16248370"
 val kotlinJvmTarget = JvmTarget.JVM_21
 
-val appVersionCode = gitInfo.commitCount
+val appVersionCode = if (buildNum > 0) buildNum else gitInfo.commitCount
 val appVersionName = gitInfo.versionName
 val appGitHash = gitInfo.shortHash
 

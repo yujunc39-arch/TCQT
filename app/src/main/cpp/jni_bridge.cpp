@@ -108,7 +108,7 @@ extern "C" jobject jni_native_invoke_backup(JNIEnv *env, jclass, jobject backup_
 
 bool register_entry_natives(JNIEnv *env, jobject class_loader) {
     jclass clazz = load_class_from_loader(
-            env, class_loader, "com.owo233.tcqt.loader.zygisk.ZygiskEntry");
+            env, class_loader, "com.test.tcqt.loader.zygisk.ZygiskEntry");
     if (clazz == nullptr) {
         LOGE("register_entry_natives: ZygiskEntry class not found");
         return false;
@@ -135,7 +135,7 @@ bool register_entry_natives(JNIEnv *env, jobject class_loader) {
 
 bool register_hook_bridge_natives(JNIEnv *env, jobject class_loader) {
     jclass clazz = load_class_from_loader(
-            env, class_loader, "com.owo233.tcqt.loader.zygisk.ZygiskHookBridge");
+            env, class_loader, "com.test.tcqt.loader.zygisk.ZygiskHookBridge");
     if (clazz == nullptr) {
         LOGE("register_hook_bridge_natives: ZygiskHookBridge class not found");
         return false;

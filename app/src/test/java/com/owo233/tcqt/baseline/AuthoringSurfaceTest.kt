@@ -1,4 +1,4 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -22,7 +22,7 @@ class AuthoringSurfaceTest {
 
     private fun featureImports(): List<Pair<String, String>> =
         SourceScanner.mainKotlinFiles()
-            .filter { it.path.replace('\\', '/').contains("/com/owo233/tcqt/features/") }
+            .filter { it.path.replace('\\', '/').contains("/com/test/tcqt/features/") }
             .flatMap { file ->
                 Regex("^\\s*import\\s+([\\w.]+)", RegexOption.MULTILINE)
                     .findAll(SourceScanner.stripComments(SourceScanner.read(file)))
@@ -40,12 +40,12 @@ class AuthoringSurfaceTest {
      * 实测均为 0 处，属于"功能不该认识的界面表现模型"。
      */
     private val FORBIDDEN = listOf(
-        "com.owo233.tcqt.core.action.StartupScheduler",
-        "com.owo233.tcqt.core.action.HookSteps",
-        "com.owo233.tcqt.core.config.SettingsRegistry",
-        "com.owo233.tcqt.ui.settings",
-        "com.owo233.tcqt.ui.parasitic",
-        "com.owo233.tcqt.ui.theme",
+        "com.test.tcqt.core.action.StartupScheduler",
+        "com.test.tcqt.core.action.HookSteps",
+        "com.test.tcqt.core.config.SettingsRegistry",
+        "com.test.tcqt.ui.settings",
+        "com.test.tcqt.ui.parasitic",
+        "com.test.tcqt.ui.theme",
     )
 
     @Test
@@ -73,7 +73,7 @@ class AuthoringSurfaceTest {
         val allowed = setOf("PipelineDecorators.kt")
 
         val offenders = featureImports()
-            .filter { (_, imp) -> imp == "com.owo233.tcqt.core.action.ActionRegistry" }
+            .filter { (_, imp) -> imp == "com.test.tcqt.core.action.ActionRegistry" }
             .filterNot { (file, _) -> file in allowed }
             .map { (file, _) -> file }
 
@@ -97,7 +97,7 @@ class AuthoringSurfaceTest {
     @Test
     fun `TCQTSetting 的使用点数量被钉住（防止裸 key 回潮）`() {
         val users = featureImports()
-            .filter { (_, imp) -> imp == "com.owo233.tcqt.core.config.TCQTSetting" }
+            .filter { (_, imp) -> imp == "com.test.tcqt.core.config.TCQTSetting" }
             .map { (file, _) -> file }
             .sorted()
 
@@ -125,14 +125,14 @@ class AuthoringSurfaceTest {
             FORBIDDEN.any { imp == it || imp.startsWith("$it.") }
         }
 
-        assertTrue(matches("com.owo233.tcqt.core.action.StartupScheduler"), "精确匹配失效")
-        assertTrue(matches("com.owo233.tcqt.ui.settings.SettingModels"), "子包匹配失效")
+        assertTrue(matches("com.test.tcqt.core.action.StartupScheduler"), "精确匹配失效")
+        assertTrue(matches("com.test.tcqt.ui.settings.SettingModels"), "子包匹配失效")
         assertTrue(
-            !matches("com.owo233.tcqt.ui.component.CompatibleComposeDialog"),
+            !matches("com.test.tcqt.ui.component.CompatibleComposeDialog"),
             "ui.component 是允许的原子层，不该被判成违规",
         )
         assertTrue(
-            !matches("com.owo233.tcqt.core.action.ActionProcess"),
+            !matches("com.test.tcqt.core.action.ActionProcess"),
             "core.action 下的普通类型不该被判成违规",
         )
     }

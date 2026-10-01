@@ -1,4 +1,4 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
 import java.io.File
 import kotlin.test.Test
@@ -27,7 +27,7 @@ import kotlin.test.assertTrue
 class SettingsUiSplitTest {
 
     private val settingsDir =
-        File(SourceScanner.repoRoot, "app/src/main/java/com/owo233/tcqt/ui/settings")
+        File(SourceScanner.repoRoot, "app/src/main/java/com/test/tcqt/ui/settings")
 
     private fun settingsFiles(): List<File> =
         settingsDir.walkTopDown().filter { it.isFile && it.extension == "kt" }.toList()

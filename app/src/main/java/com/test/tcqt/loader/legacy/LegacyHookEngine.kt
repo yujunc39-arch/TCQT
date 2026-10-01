@@ -1,0 +1,73 @@
+package com.test.tcqt.loader.legacy
+
+import android.util.Log
+import com.test.tcqt.core.hook.Chain
+import com.test.tcqt.core.hook.HookParam
+import com.test.tcqt.core.hook.IHookEngine
+import com.test.tcqt.core.hook.Invoker
+import com.test.tcqt.core.hook.Unhook
+import de.robv.android.xposed.XC_MethodHook
+import de.robv.android.xposed.XC_MethodReplacement
+import de.robv.android.xposed.XposedBridge
+import java.lang.reflect.Member
+
+class LegacyHookEngine : IHookEngine {
+
+    override val apiLevel: Int = XposedBridge.getXposedVersion()
+    override val frameworkName: String = "Xposed (Legacy)"
+    override val frameworkVersion: String = XposedBridge.getXposedVersion().toString()
+    override val frameworkVersionCode: Long = XposedBridge.getXposedVersion().toLong()
+    override val bridgeClass: Class<*> = XposedBridge::class.java
+
+    override fun hookBefore(method: Member, priority: Int, callback: (HookParam) -> Unit): Unhook {
+        val unhook = XposedBridge.hookMethod(method, object : XC_MethodHook(priority) {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                callback(LegacyHookParam(param))
+            }
+        })
+        return Unhook { unhook.unhook() }
+    }
+
+    override fun hookAfter(method: Member, priority: Int, callback: (HookParam) -> Unit): Unhook {
+        val unhook = XposedBridge.hookMethod(method, object : XC_MethodHook(priority) {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                callback(LegacyHookParam(param))
+            }
+        })
+        return Unhook { unhook.unhook() }
+    }
+
+    override fun hookReplace(method: Member, priority: Int, callback: (Chain) -> Any?): Unhook {
+        val unhook = XposedBridge.hookMethod(method, object : XC_MethodReplacement(priority) {
+            override fun replaceHookedMethod(param: MethodHookParam): Any? {
+                return callback(LegacyChain(param))
+            }
+        })
+        return Unhook { unhook.unhook() }
+    }
+
+    override fun getInvoker(method: Member): Invoker {
+        return LegacyInvoker(method)
+    }
+
+    override fun deoptimize(method: Member): Boolean {
+        return false
+    }
+
+    override fun log(priority: Int, tag: String?, msg: String, t: Throwable?) {
+        val levelTag = when (priority) {
+            Log.VERBOSE -> "VERBOSE"
+            Log.DEBUG -> "DEBUG"
+            Log.INFO -> "INFO"
+            Log.WARN -> "WARN"
+            Log.ERROR -> "ERROR"
+            else -> "????"
+        }
+
+        val msg = if (tag.isNullOrEmpty()) "[$levelTag] -> $msg" else "[$tag]:[$levelTag] -> $msg"
+        XposedBridge.log(msg)
+        t?.let {
+            XposedBridge.log(t)
+        }
+    }
+}

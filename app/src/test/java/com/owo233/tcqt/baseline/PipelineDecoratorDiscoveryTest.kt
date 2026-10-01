@@ -1,10 +1,10 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
-import com.owo233.tcqt.features.internal.pipeline.OnAIOSendMsgBefore
-import com.owo233.tcqt.features.internal.pipeline.OnAIOViewUpdate
-import com.owo233.tcqt.features.internal.pipeline.OnMenuBuilder
-import com.owo233.tcqt.features.internal.pipeline.PipelineDecorators
-import com.owo233.tcqt.features.message.RecallHeaderTip
+import com.test.tcqt.features.internal.pipeline.OnAIOSendMsgBefore
+import com.test.tcqt.features.internal.pipeline.OnAIOViewUpdate
+import com.test.tcqt.features.internal.pipeline.OnMenuBuilder
+import com.test.tcqt.features.internal.pipeline.PipelineDecorators
+import com.test.tcqt.features.message.RecallHeaderTip
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -29,7 +29,7 @@ import kotlin.test.assertTrue
  */
 class PipelineDecoratorDiscoveryTest {
 
-    private fun names(type: Class<out com.owo233.tcqt.api.PipelineDecorator>): List<String> =
+    private fun names(type: Class<out com.test.tcqt.api.PipelineDecorator>): List<String> =
         PipelineDecorators.all(type).map { it.javaClass.simpleName }
 
     @Test

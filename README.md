@@ -1,7 +1,7 @@
 <div align="center">
     <h1> TCQT </h1>
 
-[![GitHub release](https://img.shields.io/github/release/Xposed-Modules-Repo/com.owo233.tcqt.svg)](https://github.com/Xposed-Modules-Repo/com.owo233.tcqt/releases/latest)
+[![GitHub release](https://img.shields.io/github/release/Xposed-Modules-Repo/com.test.tcqt.svg)](https://github.com/Xposed-Modules-Repo/com.test.tcqt/releases/latest)
 [![main](https://github.com/callng/TCQT/actions/workflows/android_ci.yml/badge.svg)](https://github.com/callng/TCQT/actions/workflows/android_ci.yml)
 [![Telegram](https://img.shields.io/badge/Telegram-Chat-0088cc?logo=telegram)](https://telegram.me/astcqt)
 [![Telegram](https://img.shields.io/badge/Telegram-CI-0088cc?logo=telegram)](https://telegram.me/citcqt)
@@ -211,7 +211,7 @@ app/build/outputs/apk/release/  # 发布版本（TCQT-<版本>-release.apk，双
 
 | Type                | Source                                                                  |
 |---------------------|-------------------------------------------------------------------------|
-| LSPosed Module Repo | [TCQT](https://github.com/Xposed-Modules-Repo/com.owo233.tcqt/releases) |
+| LSPosed Module Repo | [TCQT](https://github.com/Xposed-Modules-Repo/com.test.tcqt/releases) |
 | Here                | [TCQT](https://github.com/callng/TCQT/actions/workflows/android_ci.yml) |
 
 ### 额外说明

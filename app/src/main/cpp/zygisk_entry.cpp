@@ -22,7 +22,7 @@ constexpr const char *SHARED_PAYLOAD_APK = "/data/adb/tcqt/main.apk";
 constexpr const char *SHARED_PAYLOAD_HASH = "/data/adb/tcqt/main.apk.sha256";
 constexpr const char *SCOPE_DIR = "/data/adb/tcqt";
 constexpr const char *COMPAT_MARKER = "/data/adb/tcqt/compat.enable";
-constexpr const char *ENTRY_CLASS = "com.owo233.tcqt.loader.zygisk.ZygiskEntry";
+constexpr const char *ENTRY_CLASS = "com.test.tcqt.loader.zygisk.ZygiskEntry";
 constexpr uint64_t APK_MAX_BYTES = 256ULL * 1024 * 1024;
 
 enum class TargetApp {

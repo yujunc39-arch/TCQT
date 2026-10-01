@@ -40,11 +40,11 @@ Output Zygisk module: `app/build/outputs/zygisk/TCQT-zygisk-*.zip` (byte-identic
 ## Project Structure
 
 ```
-app/                    # Main module (com.owo233.tcqt)
+app/                    # Main module (com.test.tcqt)
 ├── src/main/
 │   ├── cpp/            # Zygisk native injector + self-made ArtMethod hook engine
 │   ├── java/
-│   │   ├── com/owo233/tcqt/
+│   │   ├── com/test/tcqt/
 │   │   │   ├── hooks/      # Hook implementations
 │   │   │   ├── ext/        # Core interfaces (IAction, Setting)
 │   │   │   ├── loader/     # Xposed entry points (legacy + modern + zygisk)
@@ -63,7 +63,7 @@ libs/
 
 ### Action Registration (KSP)
 
-1. Create hook class implementing `IAction` in `app/src/main/java/com/owo233/tcqt/hooks/`
+1. Create hook class implementing `IAction` in `app/src/main/java/com/test/tcqt/hooks/`
 2. Annotate with `@RegisterAction` (from `libs:annotations`)
 3. KSP processor generates `GeneratedActionList` at build time
 4. `ActionManager` loads and executes registered actions per-process
@@ -145,7 +145,7 @@ Architecture:
   cached APK), reads every `classes*.dex` entry from that copy via JNI
   `java.util.zip.ZipFile` (mirrors FunBox's loader), loads them via
   `InMemoryDexClassLoader` and calls
-  `com.owo233.tcqt.loader.zygisk.ZygiskEntry.init(processName, dataDir, apkPath)`.
+  `com.test.tcqt.loader.zygisk.ZygiskEntry.init(processName, dataDir, apkPath)`.
 - `app/src/main/cpp/art_hook.cpp` — self-made ArtMethod hook engine:
   JNI-probed ArtMethod layout (method_size / access_flags offset / entry point),
   `ScopedSuspendAll` + `WritableArtMethod` for safe mutation, ELF-symbol-resolved

@@ -1,4 +1,4 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

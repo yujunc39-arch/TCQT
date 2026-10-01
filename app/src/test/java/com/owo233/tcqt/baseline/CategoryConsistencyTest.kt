@@ -1,8 +1,8 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
-import com.owo233.tcqt.core.action.ActionSpec
-import com.owo233.tcqt.core.action.FeatureCategories
-import com.owo233.tcqt.generated.GeneratedActionList
+import com.test.tcqt.core.action.ActionSpec
+import com.test.tcqt.core.action.FeatureCategories
+import com.test.tcqt.generated.GeneratedActionList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -69,7 +69,7 @@ class CategoryConsistencyTest {
         val uiTabDecl = Regex("""\buiTab\s*=""")
 
         val offenders = SourceScanner.mainKotlinFiles()
-            .filter { it.path.replace('\\', '/').contains("/com/owo233/tcqt/features/") }
+            .filter { it.path.replace('\\', '/').contains("/com/test/tcqt/features/") }
             .filter { uiTabDecl.containsMatchIn(SourceScanner.stripComments(SourceScanner.read(it))) }
             .map { it.name }
 
@@ -125,15 +125,15 @@ class CategoryConsistencyTest {
     @Test
     fun `分类判定本身可证伪`() {
         assertTrue(
-            FeatureCategories.isKnown("com.owo233.tcqt.features.chat.FakePicSize"),
+            FeatureCategories.isKnown("com.test.tcqt.features.chat.FakePicSize"),
             "已登记的包被判成未登记",
         )
         assertTrue(
-            !FeatureCategories.isKnown("com.owo233.tcqt.features.brand_new_pkg.Thing"),
+            !FeatureCategories.isKnown("com.test.tcqt.features.brand_new_pkg.Thing"),
             "未登记的包被判成已登记 —— 那条护栏会永远绿，等于没有",
         )
         assertTrue(
-            !FeatureCategories.isKnown("com.owo233.tcqt.core.action.ActionSpec"),
+            !FeatureCategories.isKnown("com.test.tcqt.core.action.ActionSpec"),
             "非 features 包不该被认成功能分类",
         )
     }

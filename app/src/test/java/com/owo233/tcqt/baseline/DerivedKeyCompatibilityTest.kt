@@ -1,11 +1,11 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * 迁移到 `com.owo233.tcqt.api` 门面的功能：**派生 key 必须等于其历史 key**。
+ * 迁移到 `com.test.tcqt.api` 门面的功能：**派生 key 必须等于其历史 key**。
  *
  * 这是"用户已保存配置不丢失"的唯一机器保证：
  * - 旧契约的 key 是手写字符串（`TCQTSetting.getInt("fake_pic_size.type")`）；
@@ -197,14 +197,14 @@ class DerivedKeyCompatibilityTest {
      * （`api.*` + `core.hook.hookBefore` + `core.reflect.findMethod`）。
      * 数字变大 = 作者要认识的东西变多了，那是真回归。
      *
-     * 计数口径**不含** `import com.owo233.tcqt.annotations.RegisterAction`
+     * 计数口径**不含** `import com.test.tcqt.annotations.RegisterAction`
      * —— 注册标记不可避免，G1' 关心的是"作者要认识几个框架包"。
      */
     @Test
     fun `FakePicSize 的框架 import 面被钉住（防止作者负担膨胀）`() {
         val file = SourceScanner.mainKotlinFiles().firstOrNull { it.name == "FakePicSize.kt" }
             ?: error("找不到 FakePicSize.kt")
-        val frameworkPrefix = "import com.owo233.tcqt."
+        val frameworkPrefix = "import com.test.tcqt."
         val imports = SourceScanner.read(file).lineSequence()
             .map { it.trim() }
             .filter { it.startsWith(frameworkPrefix) }
@@ -217,11 +217,11 @@ class DerivedKeyCompatibilityTest {
                     "变多 = 作者负担增加，是真回归；变少是好事，请同步更新本断言与 ADR-007",
         )
         // 星号与具名都算「走 api 门面」。
-        // 早先这里写死了 `import com.owo233.tcqt.api.*` —— 那是过度约束：IDE 的
+        // 早先这里写死了 `import com.test.tcqt.api.*` —— 那是过度约束：IDE 的
         // Optimize Imports 会把星号展开成具名（`api.Feature` / `api.Requires` …），
         // 语义完全相同，却会让这条断言无谓地红。
         assertTrue(
-            imports.any { it.startsWith("import com.owo233.tcqt.api.") },
+            imports.any { it.startsWith("import com.test.tcqt.api.") },
             "功能契约必须走 api 门面（星号或具名 import 均可）：$imports",
         )
     }

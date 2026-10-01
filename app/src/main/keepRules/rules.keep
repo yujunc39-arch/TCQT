@@ -5,15 +5,15 @@
     public <init>(...);
 }
 
--keep class com.owo233.tcqt.** { *; }
+-keep class com.test.tcqt.** { *; }
 
 ## 保留所有继承自 BaseComposeActivity 的类 不混淆它们的无参构造函数
-#-keep class * extends com.owo233.tcqt.activity.BaseComposeActivity {
+#-keep class * extends com.test.tcqt.activity.BaseComposeActivity {
 #    <init>();
 #}
 #
 ## 保留 IAction 及其实现类的无参构造和 INSTANCE
-#-keepclassmembers class * implements com.owo233.tcqt.ext.IAction {
+#-keepclassmembers class * implements com.test.tcqt.ext.IAction {
 #    public <init>();
 #    public static ** INSTANCE;
 #}

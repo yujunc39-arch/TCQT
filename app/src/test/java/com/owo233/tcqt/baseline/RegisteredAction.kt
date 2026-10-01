@@ -1,6 +1,6 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
-import com.owo233.tcqt.core.action.FeatureCategories
+import com.test.tcqt.core.action.FeatureCategories
 import java.io.File
 
 /**
@@ -84,7 +84,7 @@ internal data class RegisteredAction(
         )
 
         /**
-         * 新契约（`com.owo233.tcqt.api.Feature`）把 key 作为**构造参数**声明：
+         * 新契约（`com.test.tcqt.api.Feature`）把 key 作为**构造参数**声明：
          * `Feature(key = "fake_pic_size", …)`。限定在 `Feature(` 调用内，
          * 避免误匹配功能体里其它 `key = "…"`。
          *

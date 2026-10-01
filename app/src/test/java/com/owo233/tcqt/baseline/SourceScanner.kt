@@ -1,4 +1,4 @@
-package com.owo233.tcqt.baseline
+package com.test.tcqt.baseline
 
 import java.io.File
 
@@ -22,14 +22,14 @@ internal object SourceScanner {
     }
 
     val mainSourceRoot: File by lazy {
-        File(repoRoot, "app/src/main/java/com/owo233/tcqt")
+        File(repoRoot, "app/src/main/java/com/test/tcqt")
     }
 
     /** KSP 生成的注册清单；若不存在则给出可执行的修复指引，而不是让断言空转。 */
     val generatedActionList: File by lazy {
         val f = File(
             repoRoot,
-            "app/build/generated/ksp/debug/kotlin/com/owo233/tcqt/generated/GeneratedActionList.kt"
+            "app/build/generated/ksp/debug/kotlin/com/test/tcqt/generated/GeneratedActionList.kt"
         )
         if (!f.isFile) {
             error(
