@@ -104,10 +104,24 @@ object FunBoxVoiceRepository {
         }
         val ext = sniffAudioExtension(bytes) ?: error("不支持的音频格式")
         val dir = File(context.cacheDir, "funbox_voice").apply { mkdirs() }
-        val safeName = item.id.replace(Regex("[^a-zA-Z0-9_-]"), "_").take(64)
-        val file = File(dir, "$safeName.$ext")
+        val file = File(dir, "${cacheKey(item)}.$ext")
         file.writeBytes(bytes)
         return file
+    }
+
+    /**
+     * 缓存稳定标识：优先用服务器对象 ID（objectId，下载就是用它，全局唯一），
+     * 其次条目 id，最后退回标题。取 MD5 十六进制——文件名安全且**不会碰撞**
+     * （此前直接用 id 做 sanitize，中文会被替换成下划线，导致标题相似的条目
+     * 互相命中同一个缓存文件，是「搜冰之后其他带冰的都显示已缓存」的根因）。
+     */
+    /** 缓存稳定标识（公开给 UI 做 remember key）。 */
+    fun cacheKey(item: VoiceItem): String {
+        val raw = item.objectId.takeIf { it.isNotBlank() }
+            ?: item.id.takeIf { it.isNotBlank() }
+            ?: item.title
+        return MessageDigest.getInstance("MD5").digest(raw.toByteArray())
+            .joinToString("") { "%02x".format(it) }
     }
 
     /** 魔数嗅探：返回缓存用的扩展名（silk/amr 直接复用，其余交给转码）。 */
@@ -132,13 +146,28 @@ object FunBoxVoiceRepository {
         return null
     }
 
-    /** 本地缓存命中检查（同一语音不重复下载）。 */
+    /** 本地缓存命中检查（同一语音不重复下载）。用 cacheKey 精确匹配，不会串味。 */
     fun cachedVoiceFile(context: Context, item: VoiceItem): File? {
         val dir = File(context.cacheDir, "funbox_voice")
         if (!dir.isDirectory) return null
-        val safeName = item.id.replace(Regex("[^a-zA-Z0-9_-]"), "_").take(64)
-        val candidates = dir.listFiles { f -> f.name.startsWith("$safeName.") } ?: return null
-        return candidates.firstOrNull { it.length() > 0 }
+        val prefix = "${cacheKey(item)}."
+        return dir.listFiles { f -> f.isFile && f.name.startsWith(prefix) }
+            ?.firstOrNull { it.length() > 0 }
+    }
+
+    /**
+     * 清理旧命名缓存：早期实现用「id sanitize 后的字符串」当文件名，
+     * 中文会被替换成下划线导致互相串味，这些文件已不可信，直接删掉。
+     */
+    fun cleanupLegacyCache(context: Context) {
+        val dir = File(context.cacheDir, "funbox_voice")
+        if (!dir.isDirectory) return
+        val md5Name = Regex("^[0-9a-f]{32}\\.")
+        dir.listFiles()?.forEach { file ->
+            if (file.isFile && !md5Name.containsMatchIn(file.name)) {
+                runCatching { file.delete() }
+            }
+        }
     }
 
     private fun md5Hex(file: File): String = runCatching {

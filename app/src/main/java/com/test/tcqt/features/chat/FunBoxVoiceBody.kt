@@ -74,10 +74,17 @@ class FunBoxVoiceBody(
     private var sendingId by mutableStateOf<String?>(null)
     private var loadedPacks by mutableStateOf(false)
 
+    /** 缓存版本号：发送完成后自增，驱动列表里的「已缓存」标记刷新。 */
+    private var cacheVersion by mutableStateOf(0)
+
     @Composable
     fun Content() {
         LaunchedEffect(Unit) {
-            if (!loadedPacks && !loading) runLoadPacks()
+            if (!loadedPacks && !loading) {
+                // 清理旧命名的缓存文件（早期 sanitize 命名会互相串味）
+                runCatching { FunBoxVoiceRepository.cleanupLegacyCache(context) }
+                runLoadPacks()
+            }
         }
 
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -250,7 +257,8 @@ class FunBoxVoiceBody(
         LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             itemsIndexed(items) { _, item ->
                 val isSending = sendingId == item.id
-                val cached = remember(item.id) {
+                // 缓存标记：用服务器对象唯一键做 remember key，并随 cacheVersion 刷新
+                val cached = remember(item.objectId, item.id, cacheVersion) {
                     runCatching { FunBoxVoiceRepository.cachedVoiceFile(context, item) != null }
                         .getOrDefault(false)
                 }
@@ -379,6 +387,7 @@ class FunBoxVoiceBody(
                 Toasts.error(friendly(t))
             } finally {
                 sendingId = null
+                cacheVersion++ // 刷新「已缓存」标记
             }
         }, "FunBox-Send").start()
     }
