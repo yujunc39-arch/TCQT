@@ -141,9 +141,9 @@ object VoiceSendUtils {
      * @param chatType     会话类型（1 好友 / 2 群聊），与宿主 intent 的 `key_chat_type` 一致。
      * @param peerUid      会话对端 uid。
      * @param filePath     本地音频文件绝对路径。
-     * @param sendOriginal 直接发送原文件（不转码为 silk）：
-     *                     音质无损，但 QQ 只有 SilkPlayer，非 silk 的格式在部分设备
-     *                     （尤其苹果端）可能无法播放，也存在其他不可控因素。
+     * @param sendOriginal 原样上传原文件（不转码）。实测任意格式都会原封不动传到
+     *                     服务器，接收方正常播放；唯一副作用是发送者本机无法试听
+     *                     （QQ 本地播放器仅支持 silk）。音质 100% 保留。
      */
     fun sendVoice(
         chatType: Int,
@@ -172,8 +172,13 @@ object VoiceSendUtils {
         Thread({
             try {
                 CrashCatcher.breadcrumb("sendVoice: 后台线程开始, duration=${durationSec}s, 原文件模式=$sendOriginal")
+                // 「直发原文件」= 原样上传，不做任何转码。实测 mp3 等格式也会原封不动
+                // 传到服务器（接收方正常收听），唯一副作用是发送者本机无法试听——
+                // QQ 本地播放器（SilkPlayer）只解码 silk。音质 100% 保留。
                 val file = if (sendOriginal) {
-                    CrashCatcher.breadcrumb("sendVoice: 跳过转码，直接发原文件")
+                    CrashCatcher.breadcrumb(
+                        "sendVoice: 原样直发 .${extOf(src.name)}（本机不可试听，对方正常）"
+                    )
                     src
                 } else {
                     ensureSilk(src)

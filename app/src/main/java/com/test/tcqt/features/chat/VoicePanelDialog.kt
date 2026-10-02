@@ -2,6 +2,7 @@ package com.test.tcqt.features.chat
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -39,6 +40,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import com.test.tcqt.core.env.Toasts
 import com.test.tcqt.host.QQInterfaces
 import com.test.tcqt.host.service.VoiceSendUtils
@@ -55,9 +59,9 @@ import top.yukonga.miuix.kmp.basic.Text
 import java.io.File
 
 /**
- * 语音面板对话框：选择本地音频并发送为语音消息。
+ * 语音面板对话框：本地音频发送 + FunBox 在线语音两个视图。
  *
- * 复刻自 fork 版本 TCQT 的语音面板功能。
+ * 复刻自 fork 版本 TCQT 的语音面板功能；在线语音业务照搬 WeKit FunBox 分享。
  */
 class VoicePanelDialog(
     private val hostContext: Context,
@@ -74,6 +78,7 @@ class VoicePanelDialog(
         var path by remember { mutableStateOf("") }
         var error by remember { mutableStateOf<String?>(null) }
         var sendOriginal by remember { mutableStateOf(false) }
+        var showFunbox by remember { mutableStateOf(false) }
         var sessionLabel by remember { mutableStateOf(fallbackLabel()) }
 
         LaunchedEffect(Unit) { sessionLabel = resolveSessionLabel() }
@@ -133,7 +138,7 @@ class VoicePanelDialog(
                                 .padding(horizontal = 20.dp, vertical = 18.dp),
                         ) {
                             Text(
-                                text = "发送语音",
+                                text = if (showFunbox) "在线语音" else "发送语音",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -146,101 +151,172 @@ class VoicePanelDialog(
                             )
                             Spacer(Modifier.height(16.dp))
 
-                            // 点击调起系统文件选择器（输入框样式：带描边、左对齐）
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .border(
-                                        width = 1.dp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            .copy(alpha = 0.35f),
-                                        shape = RoundedCornerShape(10.dp),
-                                    )
-                                    .pointerInput(Unit) {
-                                        detectTapGestures(onTap = { openPicker() })
-                                    },
-                                shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                            ) {
-                                // 输入框样式：左对齐单行文本，超出省略
-                                Text(
-                                    text = if (path.isBlank()) "点击选择音频" else File(path).name,
+                            AnimatedContent(
+                                targetState = showFunbox,
+                                transitionSpec = {
+                                    if (targetState) {
+                                        (slideInHorizontally(tween(220)) { it / 3 } + fadeIn(tween(220))) togetherWith
+                                                (slideOutHorizontally(tween(200)) { -it / 3 } + fadeOut(tween(200)))
+                                    } else {
+                                        (slideInHorizontally(tween(220)) { -it / 3 } + fadeIn(tween(220))) togetherWith
+                                                (slideOutHorizontally(tween(200)) { it / 3 } + fadeOut(tween(200)))
+                                    }
+                                },
+                                label = "panel_view",
+                            ) { funboxView ->
+                                // AnimatedContent 内部是 Box 语义，必须包一层 Column，
+                                // 否则各子元素全部叠在同一位置（重叠 bug 根因）
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                if (funboxView) {
+                                // ---- FunBox 在线语音视图 ----
+                                // remember 缓存实例：页面状态存在实例属性里，重组时不能重建。
+                                // sendOriginal 通过 lambda 延迟取值，始终读到开关最新状态
+                                val funboxBody = remember(chatType, peerUid) {
+                                    FunBoxVoiceBody(context, chatType, peerUid) { sendOriginal }
+                                }
+                                funboxBody.Content()
+
+                                Spacer(Modifier.height(12.dp))
+                                Surface(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 14.dp, vertical = 14.dp),
-                                    fontSize = 14.sp,
-                                    color = if (path.isBlank()) {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface
-                                    },
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-
-                            error?.let { msg ->
-                                Spacer(Modifier.height(8.dp))
-                                Text(
-                                    text = msg,
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.error,
-                                )
-                            }
-
-                            Spacer(Modifier.height(16.dp))
-
-                            // 发送原文件开关：不转码 → 保留原始音质，但兼容性变差
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                        onClick = { sendOriginal = !sendOriginal },
-                                    ),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = { showFunbox = false },
+                                        ),
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                ) {
                                     Text(
-                                        text = "发送原文件",
+                                        text = "返回本地语音发送",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 12.dp),
                                         fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.primary,
                                     )
-                                    Spacer(Modifier.height(2.dp))
+                                }
+                            } else {
+                                // ---- 本地文件发送视图 ----
+                                // 点击调起系统文件选择器（输入框样式：带描边、左对齐）
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .border(
+                                            width = 1.dp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                .copy(alpha = 0.35f),
+                                            shape = RoundedCornerShape(10.dp),
+                                        )
+                                        .pointerInput(Unit) {
+                                            detectTapGestures(onTap = { openPicker() })
+                                        },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                ) {
+                                    // 输入框样式：左对齐单行文本，超出省略
                                     Text(
-                                        text = "不转码可保留原始音质，但部分设备（如苹果设备）" +
-                                                "可能无法播放，也可能存在其他不可控因素",
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        text = if (path.isBlank()) "点击选择音频" else File(path).name,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 14.dp),
+                                        fontSize = 14.sp,
+                                        color = if (path.isBlank()) {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        },
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                     )
                                 }
-                                Spacer(Modifier.width(12.dp))
-                                Switch(
-                                    checked = sendOriginal,
-                                    onCheckedChange = { sendOriginal = it },
-                                )
-                            }
 
-                            Spacer(Modifier.height(18.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                Button(
-                                    onClick = { dismissWithAnimation() },
-                                    modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(
-                                        color = MaterialTheme.colorScheme.surfaceVariant
-                                    ),
-                                ) {
-                                    Text("取消", color = MaterialTheme.colorScheme.primary)
+                                error?.let { msg ->
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        text = msg,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.error,
+                                    )
                                 }
-                                Button(
-                                    onClick = { onSend(path, sendOriginal) { error = it } },
-                                    modifier = Modifier.weight(1f),
+
+                                Spacer(Modifier.height(16.dp))
+
+                                // 直发原文件开关：不转码原样上传，音质 100% 保留。
+                                // 副作用：发送者本机无法试听（QQ 本地播放器只认 silk），
+                                // 对方接收完全正常
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = { sendOriginal = !sendOriginal },
+                                        ),
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Text("发送")
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "直发原文件",
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                    }
+                                    Spacer(Modifier.width(12.dp))
+                                    Switch(
+                                        checked = sendOriginal,
+                                        onCheckedChange = { sendOriginal = it },
+                                    )
+                                }
+
+                                Spacer(Modifier.height(14.dp))
+
+                                // 在线语音（FunBox 分享）入口
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = { showFunbox = true },
+                                        ),
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                ) {
+                                    Text(
+                                        text = "在线语音",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+
+                                Spacer(Modifier.height(14.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    Button(
+                                        onClick = { dismissWithAnimation() },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(
+                                            color = MaterialTheme.colorScheme.surfaceVariant
+                                        ),
+                                    ) {
+                                        Text("取消", color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    Button(
+                                        onClick = { onSend(path, sendOriginal) { error = it } },
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Text("发送")
+                                    }
+                                }
+                                }
                                 }
                             }
                         }
@@ -254,13 +330,6 @@ class VoicePanelDialog(
         1 -> "好友($peerUid)"
         2 -> "群聊($peerUid)"
         else -> "会话($peerUid)"
-    }
-
-    /** 把字节数格式化成易读的大小。 */
-    private fun humanSize(bytes: Long): String = when {
-        bytes >= 1024L * 1024L -> String.format(java.util.Locale.ROOT, "%.1f MB", bytes / 1024.0 / 1024.0)
-        bytes >= 1024L -> String.format(java.util.Locale.ROOT, "%.0f KB", bytes / 1024.0)
-        else -> "$bytes B"
     }
 
     /** 群聊 -> 群名称(群号)；私聊 -> 备注名(QQ号)。 */

@@ -21,8 +21,8 @@ import com.test.tcqt.host.QQInterfaces
 @RegisterAction
 object VoicePanel : Feature(
     key = "voice_panel",
-    name = "发送语音文件",
-    desc = "长按输入框的语音按钮，选择本地音频文件，将其作为语音消息发送到当前会话。",
+    name = "语音面板",
+    desc = "长按语音按钮打开面板，可发送本地音频或在线语音",
     uiOrder = 90,
     processes = setOf(ActionProcess.MAIN),
 ) {
