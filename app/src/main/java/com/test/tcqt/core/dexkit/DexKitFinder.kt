@@ -163,7 +163,10 @@ interface DexKitTask {
 
         val descriptor = bridge.query()
         if (descriptor.isNullOrEmpty()) {
-            Log.e("$name: No result found matching query")
+            // 未命中 ≠ 失败：部分查询只服务于旧版宿主（如 8.9.63~9.0.8 专用的
+            // updateLeftTopBack），新版宿主上查不到是预期情形，降级为 DEBUG，
+            // 避免每次启动都在日志里留三条假错误。
+            Log.d("$name: No result found matching query")
             cache[name] = ""
         } else {
             cache[name] = descriptor

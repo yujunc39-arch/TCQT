@@ -77,8 +77,8 @@ object VoicePanel : Feature(
 
     private fun resolveCurrentSession(): Session? = runCatching {
         val activity = QQInterfaces.topActivity
-        val intent = activity.intent
-        if (intent == null) {
+        val intent = activity?.intent
+        if (activity == null || intent == null) {
             Log.w("$TAG: topActivity 或 intent 为空 activity=$activity")
             return@runCatching null
         }

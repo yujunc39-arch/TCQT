@@ -39,6 +39,25 @@ internal object FileLog {
         }.getOrNull()
     }
 
+    /** 出错时提醒用户去哪里看日志；每个进程只提示一次，避免反复刷屏。 */
+    private val notified = java.util.concurrent.atomic.AtomicBoolean(false)
+
+    private fun notifyLogLocation(file: File) {
+        if (!notified.compareAndSet(false, true)) return
+        runCatching {
+            val ctx = HookEnv.hostAppContext
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                runCatching {
+                    android.widget.Toast.makeText(
+                        ctx,
+                        "TCQT 出现异常，日志目录：${file.parentFile?.absolutePath}",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
     fun i(msg: String, tag: String = TCQTBuild.HOOK_TAG, tr: Throwable? = null) =
         submitLog("INFO", tag, msg, tr)
 
@@ -66,6 +85,8 @@ internal object FileLog {
 
     private fun writeLogToFile(level: String, tag: String, msg: String, tr: Throwable?) {
         val targetFile = getValidLogFile() ?: return
+        // 仅出错时提醒用户去看日志（每进程一次）
+        if (level == "WARN" || level == "ERROR") notifyLogLocation(targetFile)
         val logContent = buildLogContent(level, tag, msg, tr)
 
         synchronized(FileLog::class.java) {

@@ -72,7 +72,9 @@ val gitInfoProvider: Provider<GitInfo> =
             GitInfo(
                 commitCount = count,
                 shortHash = hash,
-                versionName = "$appBaseVersionName.r$count.$hash" + if (buildNum > 0) ".b$buildNum" else ""
+                versionName = "$appBaseVersionName.r" +
+                    (if (buildNum > 0) buildNum else count) +
+                    ".$hash" + if (buildNum > 0) ".b$buildNum" else ""
             )
         }
 

@@ -56,6 +56,11 @@ class XposedLogger(
             HookEngineManager.engine.log(priority, tag, message, throwable)
         }
 
+        // 落盘策略：正式版只记录 WARN / ERROR。
+        // 正常流程（INFO 及以下）不写文件，避免 TCQT/log 目录持续增长；
+        // 调试构建保持全量落盘，便于排查。
+        if (!TCQTBuild.DEBUG && level.ordinal < LogLevel.WARN.ordinal) return
+
         when (level) {
             LogLevel.VERBOSE -> FileLog.v(message, tag, throwable)
             LogLevel.DEBUG -> FileLog.d(message, tag, throwable)
@@ -66,15 +71,47 @@ class XposedLogger(
     }
 }
 
+/**
+ * 依据构建类型过滤日志。
+ *
+ * 注意：这里**不能**用 `: Logger by delegate`。Kotlin 的接口委托会把接口的
+ * **全部**成员（包括 `v/d/i/w/e` 这些带默认实现的方法）直接转发给 delegate，
+ * 于是 `debugLogger.i(...)` 会绕过被覆盖的 [log] 直接落到 [XposedLogger.i]，
+ * 过滤形同虚设。必须逐个重写。
+ *
+ * 正式版（[TCQTBuild.DEBUG] == false）只放行 [LogLevel.WARN] 及以上：
+ * 正常流程不产生任何日志，只有真正出问题时才留下记录。
+ */
 class DebugFilterLogger(
     private val delegate: Logger,
     private val isDebug: Boolean = TCQTBuild.DEBUG
-) : Logger by delegate {
+) : Logger {
+
+    private fun allow(level: LogLevel): Boolean =
+        isDebug || level.ordinal >= LogLevel.WARN.ordinal
 
     override fun log(level: LogLevel, message: String, throwable: Throwable?) {
-        if (isDebug) {
-            delegate.log(level, message, throwable)
-        }
+        if (allow(level)) delegate.log(level, message, throwable)
+    }
+
+    override fun v(message: String, throwable: Throwable?) {
+        if (allow(LogLevel.VERBOSE)) delegate.v(message, throwable)
+    }
+
+    override fun d(message: String, throwable: Throwable?) {
+        if (allow(LogLevel.DEBUG)) delegate.d(message, throwable)
+    }
+
+    override fun i(message: String, throwable: Throwable?) {
+        if (allow(LogLevel.INFO)) delegate.i(message, throwable)
+    }
+
+    override fun w(message: String, throwable: Throwable?) {
+        if (allow(LogLevel.WARN)) delegate.w(message, throwable)
+    }
+
+    override fun e(message: String, throwable: Throwable?) {
+        if (allow(LogLevel.ERROR)) delegate.e(message, throwable)
     }
 }
 

@@ -64,7 +64,7 @@ object PurifyMenuButton : Feature(
         }
 
         if (filtered.size != menu.size) {
-            Log.i("purify_menu_button: 隐藏了 ${menu.size - filtered.size} 个菜单按钮")
+            Log.d("purify_menu_button: 隐藏了 ${menu.size - filtered.size} 个菜单按钮")
             param.result = filtered
         }
     }

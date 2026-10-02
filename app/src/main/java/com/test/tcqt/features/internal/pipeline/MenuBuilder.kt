@@ -51,7 +51,7 @@ object MenuBuilder : InfraTask(
             val listMethod = targetClass.declaredMethods
                 .firstOrNull { it.name == listMethodName && it.paramCount == 0 }
             if (listMethod == null) {
-                Log.e("MenuBuilder skip component without menu method: $target")
+                Log.d("MenuBuilder skip component without menu method: $target")
                 return@forEach
             }
 

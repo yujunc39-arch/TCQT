@@ -43,7 +43,15 @@ open class QQInterfaces {
 
         val guid: String get() = GuidReader.getGuid()
 
-        val topActivity: Activity
+        /**
+         * 当前栈顶 Activity；启动早期可能为 null（三个来源都取不到）。
+         *
+         * 历史上这里是非空 `Activity`，靠最后的 `ContextUtils.getCurrentActivity()`
+         * 抛异常"兜底"—— 结果冷启动时在主线程炸出
+         * `CrashDefendException` 强进安全模式。现在改为可空，
+         * 由调用方自行判空（编译器会逐个检查）。
+         */
+        val topActivity: Activity?
             get() = QBaseActivity.sTopActivity
                 ?: Foreground.getTopActivity()
                 ?: ContextUtils.getCurrentActivity()

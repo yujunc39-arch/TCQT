@@ -105,7 +105,7 @@ object MultiSelectRecall : Feature(
                 }
             }
 
-            QQInterfaces.topActivity.onBackPressed()
+            QQInterfaces.topActivity?.onBackPressed()
         }.onFailure {
             Log.e("performBatchRecall", it)
         }

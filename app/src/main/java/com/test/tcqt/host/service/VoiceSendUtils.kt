@@ -101,6 +101,7 @@ object VoiceSendUtils {
         val ctx = runCatching { HookEnv.hostAppContext }.getOrNull()
         if (ctx == null) {
             Log.e("$TAG: hostAppContext 为空，无法转码，回退原文件")
+            CrashCatcher.flushBreadcrumbs("语音转码失败: hostAppContext 为空")
             return file
         }
         val target = pttDir()
@@ -152,11 +153,13 @@ object VoiceSendUtils {
     ): Boolean {
         if (peerUid.isBlank() || filePath.isBlank()) {
             Log.e("$TAG: peerUid 或 filePath 为空")
+            CrashCatcher.flushBreadcrumbs("语音发送失败: peerUid 或 filePath 为空")
             return false
         }
         val src = File(filePath)
         if (!src.exists() || !src.isFile) {
             Log.e("$TAG: 文件不存在或不是文件: $filePath")
+            CrashCatcher.flushBreadcrumbs("语音发送失败: 文件不存在 $filePath")
             return false
         }
         // 时长必须在转码**之前**从原文件读：silk 文件 MediaMetadataRetriever 解析不了。
@@ -207,18 +210,22 @@ object VoiceSendUtils {
                                 .sendMsg(contact.inner, arrayListOf(element)) { result, msg ->
                                     if (result != 0) {
                                         Log.e("$TAG: sendVoice failed (result=$result, msg=$msg)")
+                                        CrashCatcher.flushBreadcrumbs("语音发送失败: sendMsg result=$result msg=$msg")
                                     }
                                 }
                             CrashCatcher.breadcrumb("sendVoice: sendMsg 已返回")
                         } catch (t: Throwable) {
                             Log.e("$TAG: sendMsg 异常", t)
+                            CrashCatcher.flushBreadcrumbs("语音发送异常: ${t.javaClass.simpleName}: ${t.message}")
                         }
                     }
                 } else {
                     Log.e("$TAG: 宿主版本过低，无法生成 PublicContact（需 QQ 9.0.70+）")
+                    CrashCatcher.flushBreadcrumbs("语音发送失败: 宿主版本过低（需 QQ 9.0.70+）")
                 }
             } catch (t: Throwable) {
                 Log.e("$TAG: sendVoice 后台异常", t)
+                CrashCatcher.flushBreadcrumbs("语音发送异常: ${t.javaClass.simpleName}: ${t.message}")
             }
         }, "TCQT-VoiceEncode").start()
 

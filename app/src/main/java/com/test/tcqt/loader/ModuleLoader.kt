@@ -281,11 +281,18 @@ internal object ModuleLoader {
         System.getProperties()["tcqt.module_class_loader"] = this.javaClass.classLoader
 
         if (HookEngineManager.engine is ModernHookEngine && ProcUtil.isMain) {
+            // 冷启动时可能还没有任何 resumed 的 Activity（三个来源都取不到），
+            // 此时 topActivity 为 null 是预期情形 —— 跳过即可，绝不能在主线程抛。
+            // （主线程裸抛会被 QQ 的 crashdefend 包成 CrashDefendException 强进安全模式）
             SyncUtils.runOnUiThread {
-                val topActivity = QQInterfaces.topActivity
-                val activityName = topActivity.javaClass.name
-                if (activityName.contains("SettingActivity")) {
-                    topActivity.recreate()
+                runCatching {
+                    val topActivity = QQInterfaces.topActivity ?: return@runCatching
+                    val activityName = topActivity.javaClass.name
+                    if (activityName.contains("SettingActivity")) {
+                        topActivity.recreate()
+                    }
+                }.onFailure {
+                    Log.w("recreate SettingActivity failed: ${it.message}")
                 }
             }
         }

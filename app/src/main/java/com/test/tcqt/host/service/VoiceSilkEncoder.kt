@@ -35,8 +35,17 @@ internal object VoiceSilkEncoder {
         return header
     }
 
-    /** 转码为 silk，成功返回生成的 .silk 文件。 */
+    /** 转码为 silk，成功返回生成的 .silk 文件；失败时把步骤轨迹落盘便于排查。 */
     fun convert(context: android.content.Context, src: File, outDir: File): File? {
+        val result = convertInternal(context, src, outDir)
+        if (result == null) {
+            // 只有失败才写盘：正常流程的步骤只留在内存里
+            CrashCatcher.flushBreadcrumbs("语音转码失败: ${src.name} (${src.length()}B)")
+        }
+        return result
+    }
+
+    private fun convertInternal(context: android.content.Context, src: File, outDir: File): File? {
         CrashCatcher.breadcrumb("convert_start ${src.name} ${src.length()}B")
         val decoded = try {
             decodeToPcm(src)

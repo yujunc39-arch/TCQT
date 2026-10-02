@@ -45,18 +45,45 @@ internal object CrashCatcher {
 
     private const val BREADCRUMB = "last_step.txt"
 
+    /** 步骤轨迹的内存环形缓冲上限。 */
+    private const val BREADCRUMB_MAX = 80
+
+    /** 内存中的步骤轨迹：正常流程只记在这里，绝不写盘。 */
+    private val steps = ArrayDeque<String>()
+
     /**
-     * 面包屑：关键流程每走一步就**同步**追加一行。
+     * 面包屑：关键流程每走一步就记一行。
      *
-     * 用来对付「什么都没留下」的崩溃（LMK 杀进程 / native SIGSEGV）：
-     * 进程被瞬间杀死时，只有已经落到磁盘的内容还在。
-     * 下次进来读 [lastStep] 就知道上一次死在哪个环节。
+     * **只写内存** —— 正常流程不产生任何磁盘写入，避免日志目录被无意义地刷屏。
+     * 真正失败或崩溃时由 [flushBreadcrumbs] 一次性落盘，这样既拿到了完整的
+     * 步骤链，又不会平时一直写盘。
      */
     fun breadcrumb(step: String) {
+        runCatching {
+            synchronized(steps) {
+                steps.addLast("${LocalDateTime.now().format(fullFmt)} | $step")
+                while (steps.size > BREADCRUMB_MAX) steps.removeFirst()
+            }
+        }
+    }
+
+    /** 把内存中的步骤轨迹落盘。**仅在失败 / 崩溃时调用。** */
+    fun flushBreadcrumbs(reason: String) {
         val dir = crashDir() ?: return
         runCatching {
-            val line = "${LocalDateTime.now().format(fullFmt)} | $step\n"
-            File(dir, BREADCRUMB).appendText(line, StandardCharsets.UTF_8)
+            val snapshot = synchronized(steps) { steps.toList() }
+            val text = buildString {
+                appendLine("================ TCQT 步骤轨迹 ================")
+                appendLine("原因   : $reason")
+                appendLine("时间   : ${LocalDateTime.now().format(fullFmt)}")
+                appendLine("==============================================")
+                if (snapshot.isEmpty()) {
+                    appendLine("(无步骤记录)")
+                } else {
+                    snapshot.forEach { appendLine(it) }
+                }
+            }
+            File(dir, BREADCRUMB).writeText(text, StandardCharsets.UTF_8)
         }
     }
 
@@ -110,6 +137,23 @@ internal object CrashCatcher {
         runCatching {
             if (target.exists()) target.delete()
             pending.copyTo(target, overwrite = true)
+        }.onSuccess {
+            // 启动阶段提示更可靠：崩溃瞬间进程随时可能被杀，Toast 往往来不及渲染
+            notifyUser("TCQT：上次崩溃日志已保存到 ${dir.absolutePath}")
+        }
+    }
+
+    /** 弹 Toast 提示日志位置（切主线程）。崩溃瞬间进程可能来不及渲染，属尽力而为。 */
+    private fun notifyUser(message: String) {
+        runCatching {
+            val ctx = HookEnv.hostAppContext
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                runCatching {
+                    android.widget.Toast.makeText(
+                        ctx, message, android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
     }
 
@@ -135,6 +179,11 @@ internal object CrashCatcher {
             File(dir, LATEST).writeBytes(bytes)
             File(dir, PENDING).writeBytes(bytes)
         }
+        // 连同内存里的步骤轨迹一起落盘，方便看出崩溃前走到了哪一步
+        runCatching {
+            flushBreadcrumbs("崩溃: ${throwable.javaClass.simpleName}: ${throwable.message}")
+        }
+        notifyUser("TCQT 崩溃：日志已写入 ${dir.absolutePath}")
     }
 
     /** 读取 FileLog 正在写的那个 log.txt 的末 n 行。 */
